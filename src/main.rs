@@ -521,8 +521,6 @@ impl<'a> Importer<'a> {
             metamath_knife::proof::ProofStyle::Compressed,
             &builder.arr,
         );
-        // let mut pp = MMProofPrinter { db, steps: vec![None; builder.proofs.len()], cur: 1 };
-        // pp.proof(&builder, n, 15, &mut std::io::stdout().lock()).unwrap();
         Ok(format!("{pr}"))
     }
 }
@@ -924,24 +922,6 @@ impl<'a> ProofBuilder<'a> {
         }
         write!(w, ")")
     }
-
-    // #[allow(unused)]
-    // fn print_proof_lisp(&self, n: ProofId, indent: usize, w: &mut impl io::Write) -> io::Result<()> {
-    //   match &self.proofs[n.0 as usize].0 {
-    //     ProofStep::Thm(_) => panic!(),
-    //     ProofStep::Hyp(i, expr) => write!(w, "{:indent$}h{i}", ""),
-    //     ProofStep::App(th, subst, args, expr) => {
-    //       let th = std::str::from_utf8(self.db.statement_by_address(*th).label()).unwrap();
-    //       write!(w, "{:indent$}({th} ", "")?;
-    //       self.print_subst(subst, w)?;
-    //       for &p in &**args {
-    //         writeln!(w)?;
-    //         self.print_proof_lisp(p, indent + 2, w)?;
-    //       }
-    //       write!(w, ")")
-    //     }
-    //   }
-    // }
 }
 
 #[allow(unused)]
@@ -970,40 +950,6 @@ impl<'a> MMProofPrinter<'a> {
         writeln!(w)?;
         Ok(())
     }
-
-    // fn proof(
-    //   &mut self, pb: &ProofBuilder<'_>, id: ProofId, indent: usize, w: &mut impl io::Write,
-    // ) -> io::Result<u32> {
-    //   match &pb.proofs[id.0 as usize].0 {
-    //     ProofStep::Thm(_) => panic!(),
-    //     ProofStep::Hyp(i, expr) => {
-    //       let n = self.cur;
-    //       self.steps[id.0 as usize] = Some(n);
-    //       self.cur += 1;
-    //       self.write_line(pb, format!("{n}:h{i}"), *expr, indent, w)?;
-    //       Ok(n)
-    //     }
-    //     ProofStep::App(th, _, args, expr) => {
-    //       let th = std::str::from_utf8(self.db.statement_by_address(*th).label()).unwrap();
-    //       let mut s = String::new();
-    //       for (i, &p) in args.iter().enumerate() {
-    //         let h = match self.steps[p.0 as usize] {
-    //           Some(h) => h,
-    //           None => self.proof(pb, p, indent + 1, w)?,
-    //         };
-    //         if i != 0 {
-    //           s += ",";
-    //         }
-    //         s += &format!("{h}");
-    //       }
-    //       let n = self.cur;
-    //       self.steps[id.0 as usize] = Some(n);
-    //       self.cur += 1;
-    //       self.write_line(pb, format!("{n}:{s}:{th}"), *expr, indent, w)?;
-    //       Ok(n)
-    //     }
-    //   }
-    // }
 }
 
 fn write_lisp_stub(
@@ -1219,31 +1165,22 @@ fn main() {
                 .map(|jh| jh.join().unwrap())
                 .collect::<Vec<_>>()
         });
-        match results
+        if let Some(s) = results
             .iter()
             .filter_map(|p| p.2.as_ref().ok())
             .min_by_key(|s| s.len())
         {
-            Some(s) => println!("{s}"),
-            None => {
-                eprintln!("all reconstruction attempts failed.");
-                for (name, stat, result) in results {
-                    eprintln!("\n{name}: result = {result:?}");
-                    std::io::stderr().write_all(&stat.stderr).unwrap();
-                    std::io::stdout().write_all(&stat.stdout).unwrap();
-                    std::io::stdout().flush().unwrap();
-                }
-                std::process::exit(1);
+            println!("{s}")
+        } else {
+            eprintln!("all reconstruction attempts failed.");
+            for (name, stat, result) in results {
+                eprintln!("\n{name}: result = {result:?}");
+                std::io::stderr().write_all(&stat.stderr).unwrap();
+                std::io::stdout().write_all(&stat.stdout).unwrap();
+                std::io::stdout().flush().unwrap();
             }
+            std::process::exit(1);
         }
-        // } else {
-        //   for file in std::fs::read_dir("ivy1").unwrap() {
-        //     let file = file.unwrap().path();
-        //     let label = file.file_stem().unwrap().to_string_lossy();
-        //     println!("theorem: {label}");
-        //     run_file(&db, &cnums, &vnums, &unmangle, &label);
-        //   }
-        // }
     } else {
         let mut w = std::io::stdout().lock();
         for stmt in db.statements() {
