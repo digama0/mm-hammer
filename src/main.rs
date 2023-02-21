@@ -1096,7 +1096,6 @@ fn main() {
         let tgt_stmt = db.statement(tgt.as_bytes()).expect("theorem not found");
         let tgt = mangle(tgt.as_bytes());
         eprintln!("{tgt}");
-        std::env::set_current_dir("..").unwrap();
         write_lisp_stub(
             &db,
             &tgt_stmt,
@@ -1105,7 +1104,7 @@ fn main() {
             &mut BufWriter::new(File::create(format!("tmp/a{tgt}_thm.mm0")).unwrap()),
             &mut nreader,
         );
-        let stat = Command::new("bin/hammer.sh")
+        let stat = Command::new("src/hammer.sh")
             .arg(format!("a{tgt}_thm"))
             .status()
             .unwrap();
@@ -1125,7 +1124,7 @@ fn main() {
                 let jh = std::thread::Builder::new()
                     .name(format!("prem{i}"))
                     .spawn_scoped(s, move || {
-                        let stat = Command::new("bin/runprob1.sh")
+                        let stat = Command::new("src/runprob1.sh")
                             .args([15.to_string(), format!("tmp/a{tgt}_thm.p.prem{i}")])
                             .output()
                             .unwrap();
