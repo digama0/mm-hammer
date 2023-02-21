@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # create problems from refs
-# mkprobs1.pl ../mmsetclassv1.ax tmp/_0dif.p tmp/_0dif.p.knn960 "960:480:240:120:80:40"
+# mkprobs1.pl build/mmsetclassv1.ax tmp/_0dif.p tmp/_0dif.p.knn960 "960:480:240:120:80:40"
 my $axfile=$ARGV[0];
 my $conjfile=$ARGV[1];
 my $reffile=$ARGV[2];
