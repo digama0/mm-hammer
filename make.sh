@@ -32,10 +32,8 @@ if [ ! -d Prover9 ]; then
   cd ../..
 fi
 
-if [ ! -f set.mm ]; then
-  echo "Downloading set.mm"
-  wget -O set.mm 'https://github.com/metamath/set.mm/blob/d75c0dbe/set.mm?raw=true'
-fi
+echo "Downloading set.mm"
+wget -O set.mm 'https://github.com/metamath/set.mm/blob/develop/set.mm?raw=true'
 
 echo "Building mm-hammer"
 cargo build --release
@@ -84,11 +82,11 @@ cd ..
 cd ..
 
 echo "Testing mm-hammer with premise selection on a simple chainy problem"
-target/release/mm-hammer build/set.mm + example/hllatd.mm hllatd
+target/release/mm-hammer build/set.mm + example/hlopdNEW.mm hlopdNEW
 
 echo
 echo "Done! If you see something like"
-echo "   ( chlt wcel clat hllat syl ) ABDEZBFEZCBGH $."
+echo "      ( chlt wcel cops hlop syl ) ABDEZBFEZCBGH $."
 echo "above then it's working."
 echo
 echo "To run the hammer, use"
