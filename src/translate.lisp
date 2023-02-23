@@ -647,4 +647,4 @@
     (format t "Expected one of these commands: ~d~%" (mapcar #'car l))
     (sb-ext:exit :code 1)))
 
-(sb-ext:save-lisp-and-die "mmportclassexec" :executable t :toplevel #'top)
+(sb-ext:save-lisp-and-die "translate" :executable t :toplevel #'top)

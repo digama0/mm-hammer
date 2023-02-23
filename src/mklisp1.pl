@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # create lisp spec from problems
-# mklisp1.pl build/mmsetclassv2lisp.ax tmp/_0dif.p.lisp tmp/_0dif.p.prem240.small tmp/_0dif.p.prem480.small ...
+# mklisp1.pl build/set.mm.ax.lisp tmp/_0dif.p.lisp tmp/_0dif.p.prem240.small tmp/_0dif.p.prem480.small ...
 my $axfile=shift;
 my $conjfile=shift;
 

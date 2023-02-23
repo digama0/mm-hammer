@@ -1128,8 +1128,7 @@ fn main() {
                             .args([15.to_string(), format!("tmp/a{tgt}_thm.p.prem{i}")])
                             .output()
                             .unwrap();
-                        assert!(stat.status.success(), "runprob1 killed");
-                        let result =
+                        let result = if stat.status.success() {
                             match std::fs::read(format!("tmp/a{tgt}_thm.p.prem{i}.small.lisp")) {
                                 Ok(file2) => {
                                     let input = Importer {
@@ -1154,7 +1153,10 @@ fn main() {
                                     Err("prover failed".to_owned())
                                 }
                                 Err(e) => Err(e.to_string()),
-                            };
+                            }
+                        } else {
+                            Err("runprob1 killed".to_owned())
+                        };
                         (format!("prem{i}"), stat, result)
                     });
                 results.push(jh.unwrap());
