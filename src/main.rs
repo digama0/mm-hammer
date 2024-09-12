@@ -1,13 +1,13 @@
-use annotate_snippets::display_list::DisplayList;
+use annotate_snippets::Renderer;
 use indexmap::{IndexMap, IndexSet};
-use metamath_knife::database::DbOptions;
-use metamath_knife::formula::{NodeId, Tree};
-use metamath_knife::nameck::{Atom, NameReader, Nameset};
-use metamath_knife::proof::{ProofTreeArray, ProofTreePrinter};
-use metamath_knife::scopeck::{Hyp, ScopeResult};
-use metamath_knife::statement::StatementAddress;
-use metamath_knife::verify::ProofBuilder as _;
-use metamath_knife::{Database, StatementRef, StatementType};
+use metamath_rs::database::DbOptions;
+use metamath_rs::nameck::{Atom, NameReader, Nameset};
+use metamath_rs::proof::{ProofTreeArray, ProofTreePrinter};
+use metamath_rs::scopeck::{Hyp, ScopeResult};
+use metamath_rs::statement::StatementAddress;
+use metamath_rs::tree::{NodeId, Tree};
+use metamath_rs::verify::ProofBuilder as _;
+use metamath_rs::{Database, StatementRef, StatementType};
 use std::collections::{hash_map, BTreeMap, HashMap};
 use std::fs::File;
 use std::io::{self, BufWriter, Read, Write};
@@ -155,7 +155,9 @@ impl<'a> SExpr<'a> {
         loop {
             match self {
                 SExpr::App("!", args2) => {
-                    let [SExpr::Var(v), b]: [_; 2] = args2.try_into().unwrap() else { panic!() };
+                    let [SExpr::Var(v), b]: [_; 2] = args2.try_into().unwrap() else {
+                        panic!()
+                    };
                     let v = v
                         .strip_prefix('X')
                         .expect("forall variable not starting with X");
@@ -166,7 +168,9 @@ impl<'a> SExpr<'a> {
                     self = b;
                 }
                 SExpr::App("=>", args2) => {
-                    let [SExpr::App("p", arg), b]: [_; 2] = args2.try_into().unwrap() else { panic!() };
+                    let [SExpr::App("p", arg), b]: [_; 2] = args2.try_into().unwrap() else {
+                        panic!()
+                    };
                     let [mut a]: [_; 1] = arg.try_into().unwrap();
                     a.subst(&mut subst, if ax { Some(vnums) } else { None });
                     hyps.push(a);
@@ -432,7 +436,9 @@ impl<'a> Importer<'a> {
                         if fmla.hyps.is_empty() {
                             let Some(InputFmla::Hyp(i, e)) = inputs.find(
                                 |hyp| matches!(hyp, InputFmla::Hyp(_, e) if *e == input.conjecture),
-                            ) else { panic!() };
+                            ) else {
+                                panic!()
+                            };
                             Proof::Conjecture(Box::new(Proof::InputHyp(*i, e)))
                         } else {
                             assert!(fmla.hyps.len() == 1 && fmla.hyps[0] == input.conjecture);
@@ -444,8 +450,9 @@ impl<'a> Importer<'a> {
                                 InputFmla::Axiom(th, f) => {
                                     let mut subproof = vec![];
                                     for v in &f.hyps {
-                                        let Some(i) = fmla.hyps.iter().position(|p| v == p)
-                                        else { continue 'a };
+                                        let Some(i) = fmla.hyps.iter().position(|p| v == p) else {
+                                            continue 'a;
+                                        };
                                         subproof.push(Proof::Hyp(i))
                                     }
                                     Proof::Axiom(th, f, subproof)
@@ -513,20 +520,20 @@ impl<'a> Importer<'a> {
         let max = steps.len() * 100;
         let mut builder = ProofBuilder::new(db, self.cnums, &input.vars, unmangle, label, max)?;
         let inst = builder.inst(Default::default());
-        let ProofStep::Thm(n) = builder.expand(&steps, &proof, &[], inst)? else { panic!() };
+        let ProofStep::Thm(n) = builder.expand(&steps, &proof, &[], inst)? else {
+            panic!()
+        };
         builder.arr.qed = n;
         let pr = ProofTreePrinter::new(
             db,
             builder.label,
-            metamath_knife::proof::ProofStyle::Compressed,
+            metamath_rs::proof::ProofStyle::Compressed,
             &builder.arr,
         );
         Ok(format!("{pr}"))
     }
 }
 
-#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
-struct VarId(u32);
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
 struct ExprId(u32);
 #[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
@@ -540,14 +547,14 @@ enum Expr<'a> {
 
 #[derive(Copy, Clone)]
 enum ProofStep {
-    Step(ProofId, ExprId),
+    Step(ProofId),
     Thm(ProofId),
 }
 
 impl ProofStep {
     fn id(&self) -> ProofId {
         match *self {
-            ProofStep::Step(n, _) => n,
+            ProofStep::Step(n) => n,
             ProofStep::Thm(_) => panic!(),
         }
     }
@@ -679,7 +686,9 @@ impl<'a> ProofBuilder<'a> {
                                         .scope
                                         .get(self.db.statement_by_address(addr).label())
                                         .unwrap();
-                                    let Hyp::Floating(addr, ..) = frame.hypotheses[i] else { panic!() };
+                                    let Hyp::Floating(addr, ..) = frame.hypotheses[i] else {
+                                        panic!()
+                                    };
                                     self.db.statement_by_address(addr).math_at(0).slice
                                 }
                                 None => b"wff",
@@ -803,7 +812,7 @@ impl<'a> ProofBuilder<'a> {
             Proof::Axiom(th, fmla, ref args2) => {
                 let ret = self.sexpr(None, &fmla.concl, inst)?;
                 if let Some(&n) = self.by_expr.get(&ret) {
-                    return Ok(ProofStep::Step(n, ret));
+                    return Ok(ProofStep::Step(n));
                 }
                 let mut it = args2.iter();
                 let th = self.unmangle.get(th).cloned().unwrap_or(th.as_bytes());
@@ -851,16 +860,16 @@ impl<'a> ProofBuilder<'a> {
                 let th = self.ns.lookup_label(th).unwrap().address;
                 let n = self.arr.build(th, args, &[], 0..0);
                 self.by_expr.insert(ret, n);
-                ProofStep::Step(n, ret)
+                ProofStep::Step(n)
             }
             Proof::InputHyp(i, e) => {
                 let ret = self.sexpr(None, e, inst)?;
                 if let Some(&n) = self.by_expr.get(&ret) {
-                    return Ok(ProofStep::Step(n, ret));
+                    return Ok(ProofStep::Step(n));
                 }
                 let n = self.arr.build(self.hyps[i], vec![], &[], 0..0);
                 self.by_expr.insert(ret, n);
-                ProofStep::Step(n, ret)
+                ProofStep::Step(n)
             }
             Proof::Conjecture(ref p) => ProofStep::Thm(self.expand(steps, p, args, inst)?.id()),
             Proof::Hyp(i) => args[i],
@@ -987,64 +996,65 @@ fn write_lisp_stub(
             std::str::from_utf8(stmt.label()).unwrap()
         )
     });
-    match grammar.parse_statement(stmt, nset, nreader) {
-        Ok(Some(f)) => {
-            write!(w, "(theorem {name:?} (for").unwrap();
-            let mut ess = vec![];
-            for hyp in &*frame.hypotheses {
-                match *hyp {
-                    Hyp::Essential(addr, _) => ess.push(addr),
-                    Hyp::Floating(addr, i, tc) => write!(
-                        w,
-                        " ({:?} ({:?}))",
-                        mangle_var(nset.atom_name(frame.var_list[i]), db, addr),
-                        mangle(nset.atom_name(tc))
-                    )
-                    .unwrap(),
+    if stmt.statement_type() == StatementType::Axiom
+        && nset.get_atom(stmt.math_at(0).slice) != grammar.provable_typecode()
+    {
+        write!(w, "(term {name:?} (").unwrap();
+        for hyp in &*frame.hypotheses {
+            match *hyp {
+                Hyp::Essential(..) => panic!("essential hyp in syntax axiom {name}"),
+                Hyp::Floating(_, _, tc) => {
+                    write!(w, " ({:?})", mangle(nset.atom_name(tc))).unwrap()
                 }
             }
-            write!(w, ") (for").unwrap();
-            for addr in ess {
-                let hyp = db.statement_by_address(addr);
-                let f = grammar
-                    .parse_statement(&hyp, nset, nreader)
-                    .unwrap()
-                    .unwrap();
-                write!(w, " ({:?} ", mangle(hyp.label())).unwrap();
+        }
+        writeln!(w, " ({:?})))", mangle(&stmt.math_at(0))).unwrap();
+    } else {
+        match grammar.parse_statement(stmt, nset, nreader) {
+            Ok(f) => {
+                write!(w, "(theorem {name:?} (for").unwrap();
+                let mut ess = vec![];
+                for hyp in &*frame.hypotheses {
+                    match *hyp {
+                        Hyp::Essential(addr, _) => ess.push(addr),
+                        Hyp::Floating(addr, i, tc) => write!(
+                            w,
+                            " ({:?} ({:?}))",
+                            mangle_var(nset.atom_name(frame.var_list[i]), db, addr),
+                            mangle(nset.atom_name(tc))
+                        )
+                        .unwrap(),
+                    }
+                }
+                write!(w, ") (for").unwrap();
+                for addr in ess {
+                    let hyp = db.statement_by_address(addr);
+                    let f = grammar.parse_statement(&hyp, nset, nreader).unwrap();
+                    write!(w, " ({:?} ", mangle(hyp.label())).unwrap();
+                    rec_write(w, db, &f.tree, f.root);
+                    write!(w, ")").unwrap();
+                }
+                write!(w, ") (for) ").unwrap();
                 rec_write(w, db, &f.tree, f.root);
-                write!(w, ")").unwrap();
-            }
-            write!(w, ") (for) ").unwrap();
-            rec_write(w, db, &f.tree, f.root);
-            if uses && stmt.statement_type() == StatementType::Provable {
-                write!(w, "\n  (uses").unwrap();
-                for (_, used) in stmt.use_iter() {
-                    if used != b"?" {
-                        write!(w, " {:?}", mangle(used)).unwrap();
+                if uses && stmt.statement_type() == StatementType::Provable {
+                    write!(w, "\n  (uses").unwrap();
+                    for (_, used) in stmt.use_iter() {
+                        if used != b"?" {
+                            write!(w, " {:?}", mangle(used)).unwrap();
+                        }
                     }
-                }
-                writeln!(w, "))").unwrap();
-            } else {
-                writeln!(w, " nil)").unwrap();
-            }
-        }
-        Ok(None) => {
-            write!(w, "(term {name:?} (").unwrap();
-            for hyp in &*frame.hypotheses {
-                match *hyp {
-                    Hyp::Essential(..) => panic!("essential hyp in syntax axiom {name}"),
-                    Hyp::Floating(_, _, tc) => {
-                        write!(w, " ({:?})", mangle(nset.atom_name(tc))).unwrap()
-                    }
+                    writeln!(w, "))").unwrap();
+                } else {
+                    writeln!(w, " nil)").unwrap();
                 }
             }
-            writeln!(w, " ({:?})))", mangle(&stmt.math_at(0))).unwrap();
-        }
-        Err(e) => {
-            db.render_diags(vec![(stmt.address(), e.into())], |snippet| {
-                eprintln!("{}", DisplayList::from(snippet))
-            });
-            std::process::exit(1)
+            Err(e) => {
+                let r = Renderer::styled();
+                db.render_diags(vec![(stmt.address(), e.into())], |msg| {
+                    eprintln!("{}", r.render(msg))
+                });
+                std::process::exit(1)
+            }
         }
     }
 }

@@ -6,6 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-indexmap = "1.9"
-metamath-knife = { git = "https://github.com/david-a-wheeler/metamath-knife", branch = "parse_statement" }
-annotate-snippets = "0.9"
+indexmap = "2.5"
+metamath-rs = { git = "https://github.com/david-a-wheeler/metamath-knife", branch = "parse_statement" }
+annotate-snippets = "0.11"
