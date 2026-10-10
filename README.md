@@ -45,3 +45,8 @@ Here `hlopdNEW.mm` contains just a theorem statement:
 ```
 The program spits out a proof block that you can paste in to replace the
 `?` here.
+
+## License
+
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE)
+or [MIT license](LICENSE-MIT) at your option.
